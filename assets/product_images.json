@@ -1,0 +1,10 @@
+{
+  "7671911306846706": {
+    "primary": "https://firebasestorage.googleapis.com/v0/b/big-szef-menu.firebasestorage.app/o/herbata_bigszef.jpg?alt=media&token=af2c689e-dded-4990-b2ec-8834d72c4196",
+    "fallback": "https://firebasestorage.googleapis.com/v0/b/big-szef-menu.firebasestorage.app/o/herbata_bigszef.jpg?alt=media&token=af2c689e-dded-4990-b2ec-8834d72c4196"
+  },
+  "default": {
+    "primary": "https://firebasestorage.googleapis.com/v0/b/big-szef-menu.firebasestorage.app/o/herbata_bigszef.jpg?alt=media&token=af2c689e-dded-4990-b2ec-8834d72c4196",
+    "fallback": "https://firebasestorage.googleapis.com/v0/b/big-szef-menu.firebasestorage.app/o/herbata_bigszef.jpg?alt=media&token=af2c689e-dded-4990-b2ec-8834d72c4196"
+  }
+} 

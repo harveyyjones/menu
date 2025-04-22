@@ -1,9 +1,15 @@
+import 'package:big_szef_menu/screens/home_screen/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/home/home_screen.dart';
-import 'constants/app_theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -12,32 +18,19 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Restaurant Menu',
-      theme: ThemeData(
-        primaryColor: AppTheme.primaryBackground,
-        scaffoldBackgroundColor: AppTheme.primaryBackground,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppTheme.primaryBackground,
-          elevation: 0,
-          iconTheme: IconThemeData(color: AppTheme.primaryText),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.accent,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+        debugShowCheckedModeBanner: false,
+        title: 'QR Menu',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blue,
+            brightness: Brightness.light,
           ),
         ),
-      ),
-      home: const HomeScreen(),
-    );
+        home: HomeScreen());
   }
 }
