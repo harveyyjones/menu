@@ -40,15 +40,57 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search products...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+              onChanged: (value) {
+                ref.read(searchQueryProvider.notifier).state = value;
+                ref.read(selectedCategoryProvider.notifier).state = null;
+              },
+            ),
+          ),
           SizedBox(
             height: 50,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: ProductsService.categoryNames.length,
+              itemCount: ProductsService.categoryNames.length +
+                  1, // +1 for "All Products"
               itemBuilder: (context, index) {
+                // First chip is "All Products"
+                if (index == 0) {
+                  final isSelected = selectedCategory == null;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: ChoiceChip(
+                      label: const Text('All Products'),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          ref.read(selectedCategoryProvider.notifier).state =
+                              null;
+                        }
+                      },
+                    ),
+                  );
+                }
+
+                // Adjust index for the category map
+                final actualIndex = index - 1;
                 final categoryId =
-                    ProductsService.categoryNames.keys.elementAt(index);
+                    ProductsService.categoryNames.keys.elementAt(actualIndex);
                 final isSelected = categoryId == selectedCategory;
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ChoiceChip(
@@ -58,11 +100,31 @@ class HomeScreen extends ConsumerWidget {
                       if (selected) {
                         ref.read(selectedCategoryProvider.notifier).state =
                             categoryId;
+                      } else {
+                        ref.read(selectedCategoryProvider.notifier).state =
+                            null;
                       }
                     },
                   ),
                 );
               },
+            ),
+          ),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Text(
+                  selectedCategory == null
+                      ? 'All Products'
+                      : productsService.getCategoryName(selectedCategory),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
           const Expanded(child: MenuGrid()),

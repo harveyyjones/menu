@@ -58,7 +58,7 @@ class CartScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Total:',
                           style: TextStyle(
                             fontSize: 18,
@@ -66,7 +66,7 @@ class CartScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          '\$${totalPrice.toStringAsFixed(2)}',
+                          '${totalPrice.toStringAsFixed(2)} zł',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -99,6 +99,27 @@ class CartItemCard extends ConsumerWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
+            if (item.product.imageUrlSubtitle != null &&
+                item.product.imageUrlSubtitle!.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(
+                  item.product.imageUrlSubtitle!,
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey.shade200,
+                      child: const Icon(Icons.image_not_supported,
+                          color: Colors.grey),
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,9 +131,42 @@ class CartItemCard extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  if (item.selectedVariant != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Variant',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            item.selectedVariant!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
-                    '\$${(item.product.priceWithVat * item.quantity).toStringAsFixed(2)}',
+                    '${(item.product.priceWithVat * item.quantity).toStringAsFixed(2)} zł',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.green,

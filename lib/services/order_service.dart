@@ -14,12 +14,19 @@ class OrderService {
     required BuildContext context,
     String? paymentMethodId = '900000002',
     String? note = 'This is a mobile test order.',
+    required int tableId,
+    List<String>? variantNotes,
   }) async {
     try {
-      debugPrint('🚀 Creating order with following details:');
-      debugPrint('📦 Items: ${jsonEncode(items)}');
-      debugPrint('💳 Payment Method ID: $paymentMethodId');
-      if (note != null) debugPrint('📝 Note: $note');
+      debugPrint('🚀 Creating order');
+      debugPrint('📦 Items count: ${items.length}');
+      debugPrint('🪑 Table ID: $tableId');
+
+      // Log the items with their notes/variants
+      for (var item in items) {
+        debugPrint(
+            '📋 Item ID: ${item['id']}, Quantity: ${item['qty']}, Note: ${item['note']}');
+      }
 
       final accessToken = await _tokenService.getValidAccessToken();
 
@@ -31,51 +38,53 @@ class OrderService {
 
       final body = {
         "action": "order/create",
-        "table-id": 2601205584233623,
-        "payment_method_id": "900000002",
-        "note": note ?? "Created for testing purposes.",
-        "external-id": "EXT-12345",
-        "items": items.isNotEmpty
-            ? items
-            : [
-                {
-                  "id": 7671912974527303,
-                  "qty": 2,
-                  "note": "Item note",
-                  "tags": []
-                }
-              ],
-        "lock": true,
+        "table-id": tableId,
+        "payment-method-id": paymentMethodId,
+        "note": note ?? "ONLINE ORDER",
+        "external-id": "External Id.",
+        "items": items,
+        "print-append": "Test print",
+        "print-config": {
+          "characters": 14,
+          "print-mini": true,
+          "print-logo": true,
+          "font": 1
+        },
+        "print-type": "local",
+        "take-away": false
       };
-      if (note != null) body['note'] = note;
 
-      debugPrint('📤 Sending request with headers: ${jsonEncode(headers)}');
-      debugPrint('📤 Sending request with body: ${jsonEncode(body)}');
-
-      final response = await http.post(
-        Uri.parse(
-            '${ApiConstants.baseUrl}/clouds/${ApiConstants.cloudId}/branches/${ApiConstants.branchId}/pos-actions'),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .post(
+            Uri.parse(
+                '${ApiConstants.baseUrl}/clouds/${ApiConstants.cloudId}/branches/${ApiConstants.branchId}/pos-actions'),
+            headers: headers,
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 60));
 
       debugPrint('📥 Response status code: ${response.statusCode}');
-      debugPrint('📥 Response body: ${response.body}');
+
+      // Print full response body
+      debugPrint('📥 FULL RESPONSE BODY: ${response.body}');
 
       final responseData = jsonDecode(response.body);
       responseData['statusCode'] = response.statusCode;
+
+      // Print formatted JSON
+      debugPrint(
+          '📥 PARSED RESPONSE: ${const JsonEncoder.withIndent('  ').convert(responseData)}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint('✅ Order created successfully');
         return responseData;
       } else {
         debugPrint('❌ Failed to create order: ${response.statusCode}');
-        debugPrint('❌ Error response: ${response.body}');
         throw Exception('Failed to create order: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('❌ Exception during order creation: $e');
-      rethrow;
+      debugPrint('❌ Error during order creation: $e');
+      throw Exception('Error creating order: $e');
     }
   }
 

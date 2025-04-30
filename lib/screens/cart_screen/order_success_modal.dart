@@ -60,16 +60,32 @@ class OrderSuccessModal extends StatelessWidget {
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
+                final String? note = item['note'];
+
                 return ListTile(
                   title: Text(item['name'] ?? 'Unknown Item'),
-                  subtitle: Text('Quantity: ${item['qty']}'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Quantity: ${item['qty']}'),
+                      if (note != null && note.isNotEmpty)
+                        Text(
+                          'Variant: $note',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                    ],
+                  ),
                   trailing: Text(
-                    '\$${item['price-with-vat']?['total']?.toStringAsFixed(2) ?? '0.00'}',
+                    '${item['price-with-vat']?['total']?.toStringAsFixed(2) ?? '0.00'} zł',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
                     ),
                   ),
+                  isThreeLine: note != null && note.isNotEmpty,
                 );
               },
             ),

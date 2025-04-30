@@ -5,10 +5,12 @@ import '../models/product_model.dart';
 class ProductQuantity {
   final Product product;
   final int quantity;
+  final String? selectedVariant;
 
   ProductQuantity({
     required this.product,
     required this.quantity,
+    this.selectedVariant,
   });
 }
 
@@ -31,11 +33,15 @@ class CartState {
 class CartNotifier extends StateNotifier<CartState> {
   CartNotifier() : super(CartState());
 
-  void addItem(Product product, int quantity) {
+  void addItem(Product product, int quantity, {String? selectedVariant}) {
     state = CartState(
       items: [
         ...state.items,
-        ProductQuantity(product: product, quantity: quantity)
+        ProductQuantity(
+          product: product,
+          quantity: quantity,
+          selectedVariant: selectedVariant,
+        )
       ],
     );
   }
@@ -64,4 +70,25 @@ final productQuantityProvider = Provider.family<int, Product>((ref, product) {
     orElse: () => ProductQuantity(product: product, quantity: 0),
   );
   return item.quantity;
+});
+
+// Provider to get variant for a product in cart
+final productVariantInCartProvider =
+    Provider.family<String?, String>((ref, productId) {
+  final cart = ref.watch(cartProvider);
+  final item = cart.items.firstWhere(
+    (item) => item.product.id == productId,
+    orElse: () => ProductQuantity(
+        product: Product(
+          id: '',
+          name: '',
+          priceWithVat: 0,
+          categoryId: '',
+          display: false,
+          unit: '',
+          vat: 0,
+        ),
+        quantity: 0),
+  );
+  return item.selectedVariant;
 });

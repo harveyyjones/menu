@@ -11,6 +11,7 @@ class Product {
   final List<String>? notes;
   final String unit;
   final double vat;
+  final String? imageUrlSubtitle;
 
   Product({
     required this.id,
@@ -25,6 +26,7 @@ class Product {
     this.notes,
     required this.unit,
     required this.vat,
+    this.imageUrlSubtitle,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,8 @@ class Product {
           : null,
       unit: json['unit']?.toString() ?? '',
       vat: _parseDouble(json['vat']),
+      imageUrlSubtitle: json['subtitle']
+          ?.toString(), // It should stay as subtitle from the api side. but should be kept as imageUrlSubtitle in the model.
     );
   }
 

@@ -44,6 +44,7 @@ class ProductsService {
   };
 
   Future<List<Product>> getAllProducts() async {
+    // Flow starts here, the all products are fetched from the API for the first time.
     List<Product> allProducts = [];
     int currentPage = 1;
     bool hasMorePages = true;
