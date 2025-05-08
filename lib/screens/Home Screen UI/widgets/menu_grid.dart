@@ -13,6 +13,7 @@ class MenuGrid extends ConsumerWidget {
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final products = ref.watch(filteredProductsProvider(selectedCategory));
     final searchText = ref.watch(searchQueryProvider);
+    final theme = Theme.of(context);
 
     // Show a loading indicator when there are no products yet
     if (products.isEmpty) {
@@ -20,8 +21,24 @@ class MenuGrid extends ConsumerWidget {
       final isLoading = ref.watch(isLoadingProvider);
 
       if (isLoading) {
-        return const Center(
-          child: CircularProgressIndicator(),
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                color: theme.colorScheme.primary,
+                strokeWidth: 3,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Loading menu...',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: theme.colorScheme.onBackground.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
         );
       }
 
@@ -29,14 +46,32 @@ class MenuGrid extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.no_food, size: 64, color: Colors.grey),
+            Icon(Icons.no_food, size: 72, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               searchText.isNotEmpty
                   ? 'No products match your search'
                   : 'No products in this category',
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
+                fontWeight: FontWeight.w500,
+              ),
             ),
+            if (searchText.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextButton.icon(
+                  icon: const Icon(Icons.restart_alt),
+                  label: const Text('Clear Search'),
+                  onPressed: () {
+                    ref.read(searchQueryProvider.notifier).state = '';
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
           ],
         ),
       );
@@ -57,18 +92,19 @@ class MenuGrid extends ConsumerWidget {
               'Showing ${products.length} products',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: theme.colorScheme.onBackground.withOpacity(0.6),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(12),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: isAllProducts ? 2 : 2,
                 childAspectRatio: isAllProducts ? 0.7 : 0.7,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 16,
               ),
               itemCount: products.length,
               itemBuilder: (context, index) {
@@ -86,12 +122,12 @@ class MenuGrid extends ConsumerWidget {
 
     // Regular category view
     return GridView.builder(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
@@ -120,53 +156,59 @@ class MenuItemCard extends ConsumerWidget {
     final quantity = ref.watch(productCounterProvider(product));
     final hasImage = product.imageUrlSubtitle != null &&
         product.imageUrlSubtitle!.isNotEmpty;
+    final theme = Theme.of(context);
 
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(isCompact ? 8 : 12),
+        borderRadius: BorderRadius.circular(16),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             flex: 3,
             child: Stack(
+              fit: StackFit.expand,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(isCompact ? 8 : 12),
-                  ),
-                  child: hasImage
-                      ? Image.network(
+                hasImage
+                    ? Hero(
+                        tag: 'product-${product.id}',
+                        child: Image.network(
                           product.imageUrlSubtitle!,
                           fit: BoxFit.cover,
                           width: double.infinity,
                           errorBuilder: (context, error, stackTrace) {
-                            return _buildPlaceholder();
+                            return _buildPlaceholder(theme);
                           },
-                        )
-                      : _buildPlaceholder(),
-                ),
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return _buildImageLoading(theme);
+                          },
+                        ),
+                      )
+                    : _buildPlaceholder(theme),
                 // Price badge
                 Positioned(
                   bottom: 0,
                   right: 0,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 10,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: theme.colorScheme.primary.withOpacity(0.9),
                       borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
+                        topLeft: Radius.circular(12),
                       ),
                     ),
                     child: Text(
                       '${product.priceWithVat.toStringAsFixed(2)} zł',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -176,8 +218,8 @@ class MenuItemCard extends ConsumerWidget {
                 // If no image, show display status badge
                 if (!hasImage && !product.display)
                   Positioned(
-                    top: 0,
-                    left: 0,
+                    top: 8,
+                    left: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -185,9 +227,7 @@ class MenuItemCard extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.8),
-                        borderRadius: const BorderRadius.only(
-                          bottomRight: Radius.circular(8),
-                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
                         'Hidden',
@@ -205,7 +245,7 @@ class MenuItemCard extends ConsumerWidget {
           Expanded(
             flex: isCompact ? 2 : 2,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -213,25 +253,14 @@ class MenuItemCard extends ConsumerWidget {
                   Text(
                     product.name,
                     style: TextStyle(
-                      fontSize: isCompact ? 12 : 16,
+                      fontSize: isCompact ? 13 : 16,
                       fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (product.categoryId.isNotEmpty && !isCompact)
-                    // Padding(
-                    //   padding: const EdgeInsets.only(top: 4.0),
-                    //   child: Text(
-                    //     'Cat ID: ${product.categoryId}',
-                    //     style: TextStyle(
-                    //       fontSize: 10,
-                    //       color: Colors.grey.shade600,
-                    //     ),
-                    //     maxLines: 1,
-                    //     overflow: TextOverflow.ellipsis,
-                    //   ),
-                    // ),
                     const Spacer(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -239,52 +268,88 @@ class MenuItemCard extends ConsumerWidget {
                       if (!isCompact)
                         Text(
                           '${product.priceWithVat.toStringAsFixed(2)} zł',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.green,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                       const Spacer(),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: isCompact ? 24 : 36,
-                            height: isCompact ? 24 : 36,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              iconSize: isCompact ? 16 : 20,
-                              icon: const Icon(Icons.remove, color: Colors.red),
-                              onPressed: quantity > 0
-                                  ? () => ref
-                                      .read(counterProvider.notifier)
-                                      .decrement(product.id)
-                                  : null,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Text(
-                              quantity.toString(),
-                              style: TextStyle(
-                                fontSize: isCompact ? 14 : 16,
-                                fontWeight: FontWeight.bold,
+                      Container(
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border:
+                              Border.all(color: Colors.grey.shade300, width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: quantity > 0
+                                      ? () => ref
+                                          .read(counterProvider.notifier)
+                                          .decrement(product.id)
+                                      : null,
+                                  child: SizedBox(
+                                    width: 32,
+                                    height: 32,
+                                    child: Icon(
+                                      Icons.remove,
+                                      size: 16,
+                                      color: quantity > 0
+                                          ? Colors.red
+                                          : Colors.grey.shade400,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(
-                            width: isCompact ? 24 : 36,
-                            height: isCompact ? 24 : 36,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              iconSize: isCompact ? 16 : 20,
-                              icon: const Icon(Icons.add, color: Colors.green),
-                              onPressed: () => ref
-                                  .read(counterProvider.notifier)
-                                  .increment(product.id),
+                            SizedBox(
+                              width: 24,
+                              child: Center(
+                                child: Text(
+                                  quantity.toString(),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => ref
+                                      .read(counterProvider.notifier)
+                                      .increment(product.id),
+                                  child: SizedBox(
+                                    width: 32,
+                                    height: 32,
+                                    child: Icon(
+                                      Icons.add,
+                                      size: 16,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -297,17 +362,17 @@ class MenuItemCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(ThemeData theme) {
     return Container(
       color: Colors.grey[200],
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.no_photography,
               size: 40,
-              color: Colors.grey,
+              color: theme.colorScheme.onSurface.withOpacity(0.3),
             ),
             if (!isCompact)
               Padding(
@@ -316,11 +381,23 @@ class MenuItemCard extends ConsumerWidget {
                   'No Image',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: theme.colorScheme.onSurface.withOpacity(0.5),
                   ),
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageLoading(ThemeData theme) {
+    return Container(
+      color: Colors.grey[200],
+      child: Center(
+        child: CircularProgressIndicator(
+          color: theme.colorScheme.primary,
+          strokeWidth: 2,
         ),
       ),
     );

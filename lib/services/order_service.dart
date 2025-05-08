@@ -40,7 +40,11 @@ class OrderService {
         "action": "order/create",
         "table-id": tableId,
         "payment-method-id": paymentMethodId,
-        "note": note ?? "ONLINE ORDER",
+        "note": note.toString() +
+                "  TABLE NUMBER:" +
+                tableId.toString() +
+                "ONLINE ORDER" ??
+            "ONLINE ORDER",
         "external-id": "External Id.",
         "items": items,
         "print-append": "Test print",
@@ -54,6 +58,11 @@ class OrderService {
         "take-away": false
       };
 
+      debugPrint(
+          '📤 REQUEST BODY: ${const JsonEncoder.withIndent('  ').convert(body)}');
+      debugPrint(
+          '📤 REQUEST HEADERS: ${const JsonEncoder.withIndent('  ').convert(headers)}');
+
       final response = await http
           .post(
             Uri.parse(
@@ -63,10 +72,13 @@ class OrderService {
           )
           .timeout(const Duration(seconds: 60));
 
-      debugPrint('📥 Response status code: ${response.statusCode}');
-
-      // Print full response body
-      debugPrint('📥 FULL RESPONSE BODY: ${response.body}');
+      // Print complete response information
+      debugPrint('==================================================');
+      debugPrint('📥 RESPONSE STATUS CODE: ${response.statusCode}');
+      debugPrint(
+          '📥 RESPONSE HEADERS: ${const JsonEncoder.withIndent('  ').convert(response.headers)}');
+      debugPrint('📥 RESPONSE BODY: ${response.body}');
+      debugPrint('==================================================');
 
       final responseData = jsonDecode(response.body);
       responseData['statusCode'] = response.statusCode;

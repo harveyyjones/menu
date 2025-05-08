@@ -13,13 +13,26 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final productsService = ProductsService();
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menu'),
+        elevation: 0,
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Menu',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.shopping_cart),
+            icon: Icon(
+              Icons.shopping_cart_outlined,
+              color: theme.colorScheme.primary,
+              size: 28,
+            ),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -29,7 +42,10 @@ class HomeScreen extends ConsumerWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: theme.colorScheme.primary,
+            ),
             onPressed: () async {
               await ref
                   .read(allProductsStateProvider.notifier)
@@ -38,98 +54,166 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search products...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+      body: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.background,
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: TextFormField(
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  prefixIcon:
+                      Icon(Icons.search, color: theme.colorScheme.primary),
+                  suffixIcon: Consumer(builder: (context, ref, _) {
+                    final query = ref.watch(searchQueryProvider);
+                    if (query.isEmpty) return const SizedBox.shrink();
+
+                    return IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        ref.read(searchQueryProvider.notifier).state = '';
+                      },
+                    );
+                  }),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surface,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.grey[200]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: theme.colorScheme.primary),
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                onChanged: (value) {
+                  ref.read(searchQueryProvider.notifier).state = value;
+                  ref.read(selectedCategoryProvider.notifier).state = null;
+                },
               ),
-              onChanged: (value) {
-                ref.read(searchQueryProvider.notifier).state = value;
-                ref.read(selectedCategoryProvider.notifier).state = null;
-              },
             ),
-          ),
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: ProductsService.categoryNames.length +
-                  1, // +1 for "All Products"
-              itemBuilder: (context, index) {
-                // First chip is "All Products"
-                if (index == 0) {
-                  final isSelected = selectedCategory == null;
+            Container(
+              height: 60,
+              margin: const EdgeInsets.only(top: 12),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: ProductsService.categoryNames.length +
+                    1, // +1 for "All Products"
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemBuilder: (context, index) {
+                  // First chip is "All Products"
+                  if (index == 0) {
+                    final isSelected = selectedCategory == null;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: ChoiceChip(
+                        label: const Text('All Products'),
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : theme.colorScheme.onSurface,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        selected: isSelected,
+                        selectedColor: theme.colorScheme.primary,
+                        backgroundColor: theme.colorScheme.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: isSelected
+                                ? Colors.transparent
+                                : Colors.grey[300]!,
+                          ),
+                        ),
+                        elevation: isSelected ? 2 : 0,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        onSelected: (selected) {
+                          if (selected) {
+                            ref.read(selectedCategoryProvider.notifier).state =
+                                null;
+                          }
+                        },
+                      ),
+                    );
+                  }
+
+                  // Adjust index for the category map
+                  final actualIndex = index - 1;
+                  final categoryId =
+                      ProductsService.categoryNames.keys.elementAt(actualIndex);
+                  final isSelected = categoryId == selectedCategory;
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: ChoiceChip(
-                      label: const Text('All Products'),
+                      label: Text(productsService.getCategoryName(categoryId)),
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
                       selected: isSelected,
+                      selectedColor: theme.colorScheme.primary,
+                      backgroundColor: theme.colorScheme.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: isSelected
+                              ? Colors.transparent
+                              : Colors.grey[300]!,
+                        ),
+                      ),
+                      elevation: isSelected ? 2 : 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       onSelected: (selected) {
                         if (selected) {
+                          ref.read(selectedCategoryProvider.notifier).state =
+                              categoryId;
+                        } else {
                           ref.read(selectedCategoryProvider.notifier).state =
                               null;
                         }
                       },
                     ),
                   );
-                }
-
-                // Adjust index for the category map
-                final actualIndex = index - 1;
-                final categoryId =
-                    ProductsService.categoryNames.keys.elementAt(actualIndex);
-                final isSelected = categoryId == selectedCategory;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: ChoiceChip(
-                    label: Text(productsService.getCategoryName(categoryId)),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        ref.read(selectedCategoryProvider.notifier).state =
-                            categoryId;
-                      } else {
-                        ref.read(selectedCategoryProvider.notifier).state =
-                            null;
-                      }
-                    },
-                  ),
-                );
-              },
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                Text(
-                  selectedCategory == null
-                      ? 'All Products'
-                      : productsService.getCategoryName(selectedCategory),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                selectedCategory == null
+                    ? 'All Products'
+                    : productsService.getCategoryName(selectedCategory),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onBackground,
                 ),
-              ],
+              ),
             ),
-          ),
-          const Expanded(child: MenuGrid()),
-          const AddToCartButtonWidget(),
-        ],
+            const Expanded(child: MenuGrid()),
+            const AddToCartButtonWidget(),
+          ],
+        ),
       ),
     );
   }

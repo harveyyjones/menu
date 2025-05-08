@@ -83,7 +83,9 @@ final filteredProductsProvider =
       // If no category is selected (All Products view), show all products except hidden categories
       if (categoryId == null) {
         filteredProducts = products
-            .where((product) => !hiddenCategories.contains(product.categoryId))
+            .where((product) =>
+                !hiddenCategories.contains(product.categoryId) &&
+                product.display == true)
             .toList();
       }
       // When category is selected, apply normal filters
