@@ -47,7 +47,7 @@ class Product {
           : null,
       unit: json['unit']?.toString() ?? '',
       vat: _parseDouble(json['vat']),
-      imageUrlSubtitle: json['subtitle']
+      imageUrlSubtitle: json['description']
           ?.toString(), // It should stay as subtitle from the api side. but should be kept as imageUrlSubtitle in the model.
     );
   }

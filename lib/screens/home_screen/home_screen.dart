@@ -1,4 +1,7 @@
 import 'package:big_szef_menu/screens/Home%20Screen%20UI/widgets/add_to_cart_button_widget.dart';
+import 'package:big_szef_menu/screens/cart_screen/checkout_button_widget.dart';
+import 'package:big_szef_menu/services/get_tables_service.dart';
+import 'package:big_szef_menu/utils/table_url_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Home Screen UI/widgets/menu_grid.dart';
@@ -7,10 +10,13 @@ import '../../services/products_service.dart';
 import '../cart_screen/cart_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  final TableUrlGenerator tableUrlGenerator = TableUrlGenerator();
+  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    String? _currentTable = tableUrlGenerator.getTableIdFromUrl();
+    // final tableUrl = TableUrlGenerator();
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final productsService = ProductsService();
     final theme = Theme.of(context);
@@ -20,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         backgroundColor: theme.colorScheme.surface,
         title: Text(
-          'Menu',
+          'Bigszef  Menu (${verbaliseCurrentTableId(_currentTable.toString())})',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: theme.colorScheme.onSurface,

@@ -6,6 +6,9 @@ import '../../providers/cart_providers.dart';
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
+
+  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartProvider);
